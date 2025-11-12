@@ -4,7 +4,7 @@ import java.nio.file.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class ProyectoEDA {
-    // MergeSort
+    // Merge Sort
     public static void mergeSort(double[] a, double[] aux, int lo, int hi) {
         if (hi - lo <= 0) return;
         int mid = (lo + hi) >>> 1;
@@ -18,7 +18,7 @@ public class ProyectoEDA {
         System.arraycopy(aux, lo, a, lo, hi - lo + 1);
     }
 
-    // QuickSort
+    // Quick Sort
     public static void quickSort(double[] a, int lo, int hi) {
         if (lo >= hi) return;
         int i = lo, j = hi;
@@ -72,12 +72,12 @@ public class ProyectoEDA {
         System.out.println("Leyendo budgets (hasta "+MIN+")...");
         double[] budgets = readBudgets(ruta, MIN);
 
-        // Aplicar fórmula: variacion = budget * (1 + r) , impuesto in {0.05,0.10,0.15}, valor_final = variacion*(1-impuesto)
+        // Aplicar fórmula: variacion = budget * (1 + r) , impuesto {0.05,0.10,0.15}, valor_final = variacion*(1-impuesto)
         double[] valorFinal = new double[budgets.length];
         Random rnd = new Random(12345);
         double[] impuestos = {0.05,0.10,0.15};
         for (int i=0;i<budgets.length;i++){
-            double r = 0.05 + rnd.nextDouble()*(0.10); // [0.05,0.15)
+            double r = 0.05 + rnd.nextDouble()*(0.10); 
             double variacion = budgets[i] * (1.0 + r);
             double imp = impuestos[rnd.nextInt(impuestos.length)];
             valorFinal[i] = variacion * (1.0 - imp);
