@@ -1,6 +1,8 @@
 # Proyecto-EDA
 Este es un repositorio en el cual se subieron todos los archivos que se implemento durante el desarrollo de la actividad.
 ---
+# Caso de estudio:
+Análisis de algoritmos de ordenamiento en una base de datos, en diferentes equipos computacionales, usando Java y Python.
 # Integrantes
 Abigail Becerra, David Jácome, Felipe Ordoñez
 # Actividades
