@@ -1,4 +1,3 @@
-// ProyectoEDA.java
 import java.io.*;
 import java.util.*;
 import java.nio.file.*;
@@ -36,7 +35,7 @@ public class ProyectoEDA {
         if (i < hi) quickSort(a, i, hi);
     }
 
-
+    //lector de archivo
     public static double[] readBudgets(String path, int minSize) throws Exception {
         BufferedReader br = Files.newBufferedReader(Paths.get(path), java.nio.charset.StandardCharsets.ISO_8859_1);
         String header = br.readLine();
@@ -96,7 +95,7 @@ public class ProyectoEDA {
         double mergeSec = (t1 - t0) / 1e9;
         System.out.printf("Mergesort: %.6f s%n", mergeSec);
 
-        // Tiempo Quik Sort
+        // Tiempo Quick Sort
         t0 = System.nanoTime();
         quickSort(aForQuick, 0, aForQuick.length-1);
         t1 = System.nanoTime();
