@@ -4,104 +4,131 @@ import java.nio.file.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class ProyectoEDA {
-    // Merge Sort
-    public static void mergeSort(double[] a, double[] aux, int lo, int hi) {
+
+    // merge sort para fechas
+    public static void mergeSortFechas(long[] a, long[] aux, int lo, int hi) {
         if (hi - lo <= 0) return;
         int mid = (lo + hi) >>> 1;
-        mergeSort(a, aux, lo, mid);
-        mergeSort(a, aux, mid+1, hi);
+
+        mergeSortFechas(a, aux, lo, mid);
+        mergeSortFechas(a, aux, mid+1, hi);
+
         int i = lo, j = mid+1, k = lo;
-        while (i <= mid || j <= hi) {
-            if (j > hi || (i <= mid && a[i] <= a[j])) aux[k++] = a[i++];
+        while (i<=mid || j<=hi) {
+            if (j>hi || (i<=mid && a[i] <= a[j])) aux[k++] = a[i++];
             else aux[k++] = a[j++];
         }
-        System.arraycopy(aux, lo, a, lo, hi - lo + 1);
+        System.arraycopy(aux, lo, a, lo, hi-lo+1);
     }
 
-    // Quick Sort
-    public static void quickSort(double[] a, int lo, int hi) {
-        if (lo >= hi) return;
+    // quick sort para valor final (valor final)
+    public static void quickSort(double[] a, int lo, int hi){
+        if(lo >= hi) return;
         int i = lo, j = hi;
-        double pivot = a[lo + (hi - lo) / 2];
-        while (i <= j) {
-            while (a[i] < pivot) i++;
-            while (a[j] > pivot) j--;
-            if (i <= j) {
-                double t = a[i]; a[i] = a[j]; a[j] = t;
+        double pivot = a[lo + (hi-lo)/2];
+
+        while(i<=j){
+            while(a[i] < pivot) i++;
+            while(a[j] > pivot) j--;
+            if(i<=j){
+                double tmp = a[i]; a[i]=a[j]; a[j]=tmp;
                 i++; j--;
             }
         }
-        if (lo < j) quickSort(a, lo, j);
-        if (i < hi) quickSort(a, i, hi);
+        if(lo < j) quickSort(a, lo, j);
+        if(i < hi) quickSort(a, i, hi);
     }
 
-    //lector de archivo
-    public static double[] readBudgets(String path, int minSize) throws Exception {
+    // leer datos
+    public static long[] fechas;
+    public static double[] budgets;
+
+    public static void readData(String path, int minSize) throws Exception {
         BufferedReader br = Files.newBufferedReader(Paths.get(path), java.nio.charset.StandardCharsets.ISO_8859_1);
+
         String header = br.readLine();
-        boolean hasHeader = header != null && header.toLowerCase().contains("budget");
-        int budgetCol = -1;
-        List<Double> vals = new ArrayList<>();
-        if (hasHeader) {
-            String[] cols = header.split("[,;]");
-            for (int i = 0; i < cols.length; i++) if (cols[i].trim().toLowerCase().equals("budget")) budgetCol = i;
-        } else {
-            budgetCol = 4;
-            br = Files.newBufferedReader(Paths.get(path));
+        String[] columnas = header.split("[,;]");
+
+        int posFecha=-1, posBudget=-1;
+
+        for(int i=0;i<columnas.length;i++){
+            String col= columnas[i].trim().toLowerCase();
+            if(col.equals("release_date")) posFecha=i;
+            if(col.equals("budget"))       posBudget=i;
         }
+
+        if(posFecha==-1 || posBudget==-1) throw new RuntimeException("No se encuentran columnas release_date o budget");
+
+        List<Long> fechasList = new ArrayList<>();
+        List<Double> budgetList = new ArrayList<>();
+
         String line;
-        while ((line = br.readLine()) != null) {
-            String[] parts = line.split("[,;]");
-            if (budgetCol >= parts.length) continue;
+        while((line=br.readLine())!=null){
+            String[] p = line.split("[,;]");
+            if(p.length <= Math.max(posFecha,posBudget)) continue;
             try {
-                double b = Double.parseDouble(parts[budgetCol].replaceAll("[^0-9.\\-]", ""));
-                vals.add(b);
-            } catch (Exception e) { /* saltar */ }
-            if (vals.size() >= minSize) break;
+                String f = p[posFecha].trim(); // yyyy-mm-dd
+                long fechaNum = Long.parseLong(f.replace("-","")); // 20200214
+                double bg = Double.parseDouble(p[posBudget].replaceAll("[^0-9.\\-]",""));
+
+                fechasList.add(fechaNum);
+                budgetList.add(bg);
+            }catch(Exception e){}
+
+            if(fechasList.size()>=minSize) break;
         }
-        // Aplicar valores random
-        while (vals.size() < minSize) vals.add( ThreadLocalRandom.current().nextDouble(0, 1e7) );
-        double[] arr = new double[vals.size()];
-        for (int i = 0; i < vals.size(); i++) arr[i] = vals.get(i);
-        return arr;
+
+        // rellenar sintéticos
+        while(fechasList.size()<minSize){
+            fechasList.add(Math.abs(ThreadLocalRandom.current().nextLong(19800101,20301231)));
+            budgetList.add(ThreadLocalRandom.current().nextDouble(0,1e7));
+        }
+
+        fechas = new long[fechasList.size()];
+        budgets = new double[budgetList.size()];
+        for(int i=0;i<fechas.length;i++){
+            fechas[i]=fechasList.get(i);
+            budgets[i]=budgetList.get(i);
+        }
     }
 
-    public static void main(String[] args) throws Exception {
-        String ruta = (args.length>0)? args[0] : "C:\\Users\\LENOVO\\Downloads\\ProyectoEDA\\BasedeDatosMoviesEDA.csv";
+    public static void main(String[] args)throws Exception {
+        String ruta = (args.length>0)? args[0]: "C:\\Users\\LENOVO\\Downloads\\ProyectoEDA\\BasedeDatosMoviesEDA.csv";
         int MIN = 1_000_000;
-        System.out.println("Leyendo budgets (hasta "+MIN+")...");
-        double[] budgets = readBudgets(ruta, MIN);
 
-        // Aplicar fórmula: variacion = budget * (1 + r) , impuesto {0.05,0.10,0.15}, valor_final = variacion*(1-impuesto)
-        double[] valorFinal = new double[budgets.length];
-        Random rnd = new Random(12345);
-        double[] impuestos = {0.05,0.10,0.15};
-        for (int i=0;i<budgets.length;i++){
-            double r = 0.05 + rnd.nextDouble()*(0.10); 
-            double variacion = budgets[i] * (1.0 + r);
-            double imp = impuestos[rnd.nextInt(impuestos.length)];
-            valorFinal[i] = variacion * (1.0 - imp);
+        System.out.println("Datos cargandose...");
+        readData(ruta,MIN);
+
+        // primero ordenamos por fecha
+        long[] fechasOrden = Arrays.copyOf(fechas, fechas.length);
+        long[] auxF = new long[fechasOrden.length];
+
+        long t0=System.nanoTime();
+        mergeSortFechas(fechasOrden,auxF,0,fechasOrden.length-1);
+        long t1=System.nanoTime();
+        double mergeSec = (t1-t0)/1e9;
+        System.out.printf("Ordenamiento por Fecha (MergeSort): %.6f s%n", mergeSec);
+
+        // ahora ordenamos segun el valor final(formula aplicada)
+        double[] valorFinal=new double[budgets.length];
+        Random rnd=new Random(12345);
+        double[] imp = {0.05,0.10,0.15};
+
+        for(int i=0;i<budgets.length;i++){
+            double r=0.05+rnd.nextDouble()*0.10;
+            double variacion = budgets[i]*(1+r);
+            double impuesto = imp[rnd.nextInt(3)];
+            valorFinal[i]=variacion*(1-impuesto);
         }
 
-        // Preparamos copias para cada sort
-        double[] aForMerge = Arrays.copyOf(valorFinal, valorFinal.length);
-        double[] aux = new double[aForMerge.length];
-        double[] aForQuick = Arrays.copyOf(valorFinal, valorFinal.length);
+        double[] valorQuick=Arrays.copyOf(valorFinal,valorFinal.length);
 
-        // Tiempo Merge Sort
-        long t0 = System.nanoTime();
-        mergeSort(aForMerge, aux, 0, aForMerge.length-1);
-        long t1 = System.nanoTime();
-        double mergeSec = (t1 - t0) / 1e9;
-        System.out.printf("Mergesort: %.6f s%n", mergeSec);
+        t0=System.nanoTime();
+        quickSort(valorQuick,0,valorQuick.length-1);
+        t1=System.nanoTime();
+        double quickSec=(t1-t0)/1e9;
 
-        // Tiempo Quick Sort
-        t0 = System.nanoTime();
-        quickSort(aForQuick, 0, aForQuick.length-1);
-        t1 = System.nanoTime();
-        double quickSec = (t1 - t0) / 1e9;
-        System.out.printf("Quicksort: %.6f s%n", quickSec);
-
-        System.out.printf("Mejor ordenamiento: %s%n", (mergeSec < quickSec) ? "Mergesort" : "Quicksort");
+        System.out.printf("Ordenamiento por formula con quick sort: %.6f s%n", quickSec);
+        System.out.println("\nMejor método: " + (mergeSec < quickSec ? "MergeSort con fechas" : "QuickSort con valor final "));
     }
 }
